@@ -1,0 +1,668 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Textbook Dictionary - Study Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --base-font-size: 14px;
+            --word-font-size: 1.875rem;
+            --content-font-size: 0.85rem;
+            --type-font-size: 0.7rem;
+            --rel-word-size: 0.8rem;
+            --ex-en-font-size: 0.875rem;
+            --ex-ja-font-size: 0.75rem;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
+            font-size: var(--base-font-size);
+            overscroll-behavior-y: none;
+            color: #334155;
+        }
+        
+        #viewWord { font-size: var(--word-font-size); line-height: 1.2; }
+        .meaning-text { font-size: var(--content-font-size); font-weight: 400; color: #334155; }
+        .type-label-text { font-size: var(--type-font-size); }
+        .rel-word-text { font-size: var(--rel-word-size); }
+        .ex-en-text { font-size: var(--ex-en-font-size); line-height: 1.4; font-weight: 800; }
+        .ex-ja-text { font-size: var(--ex-ja-font-size); font-weight: 400; }
+
+        .fmt-bold { font-weight: 800; }
+        .fmt-dot { border-bottom: 2px dotted currentColor; }
+        .fmt-uub { border-bottom: 3px solid currentColor; }
+        .fmt-od { border-top: 2px dotted currentColor; }
+
+        .sense-card { 
+            background: white;
+            border-bottom: 2px solid #e2e8f0; 
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            margin-bottom: 1rem;
+        }
+
+        .def-item { 
+            background: white;
+            border-left: 4px solid #60a5fa; 
+            border-bottom: 1px solid #cbd5e1; 
+            border-radius: 0 0.5rem 0.5rem 0;
+            padding: 0.55rem 0.5rem;
+            margin-bottom: 0.35rem;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.03);
+        }
+
+        .item-box { 
+            background: white;
+            border-left-style: solid;
+            border-left-width: 4px; 
+            border-bottom: 1px solid #cbd5e1;
+            border-radius: 0 0.5rem 0.5rem 0;
+            padding: 0.2rem 0.5rem;
+            transition: all 0.2s; 
+            margin-bottom: 0.25rem;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.03);
+        }
+        
+        .theme-indigo { border-left-color: #6366f1; } 
+        .theme-cyan { border-left-color: #06b6d4; }   
+        .theme-emerald { border-left-color: #10b981; } 
+        .theme-amber { border-left-color: #f59e0b; }   
+        .theme-slate { border-left-color: #94a3b8; }   
+
+        .active-selection { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
+        .id-badge { font-size: 9px; font-weight: 800; padding: 1px 4px; border-radius: 4px; border: 1px solid #e2e8f0; color: #94a3b8; text-transform: uppercase; background: #fff; line-height: 1; }
+        .pos-badge-def { font-size: 0.85rem; font-weight: 700; padding: 0px 4px; border-radius: 4px; line-height: 1.4; border: 1px solid currentColor; background-color: #fff; }
+        .pos-badge-box { font-size: var(--type-font-size); font-weight: 700; padding: 1px 5px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap; }
+        .tag-badge { font-size: 0.75rem; font-weight: 700; color: #64748b; background-color: #f1f5f9; padding: 2px 6px; border-radius: 6px; }
+        .level-badge { font-size: 9px; font-weight: 800; color: #fff; background-color: #6366f1; padding: 2px 5px; border-radius: 4px; line-height: 1; }
+        
+        .label-normal { color: #475569; background-color: #f1f5f9; border: 1px solid #cbd5e1; font-weight: 700; }
+        .label-caution { color: #ea580c; font-weight: 700; font-size: 0.8rem !important; }
+
+        .example-card { border-left: 4px solid #a78bfa; background-color: #f5f3ff; padding: 0.5rem; margin-bottom: 0.25rem; border-radius: 0 0.5rem 0.5rem 0; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .az-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
+
+        .mark-red { background-color: #fff1f2 !important; border-color: #fecaca !important; }
+        .mark-yellow { background-color: #fffbeb !important; border-color: #fde68a !important; }
+        .mark-green { background-color: #f0fdf4 !important; border-color: #bbf7d0 !important; }
+
+        .marker-dot { width: 1.1rem; height: 1.1rem; border-radius: 50%; cursor: pointer; transition: transform 0.1s; border: 1px solid rgba(0,0,0,0.1); }
+        .marker-dot:hover { transform: scale(1.1); }
+        .marker-dot.active { box-shadow: 0 0 0 1px white, 0 0 0 2px currentColor; }
+    </style>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="text-slate-800">
+
+    <div class="h-screen flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between shadow-sm z-50 shrink-0 h-14">
+            <div class="flex items-center gap-2 md:gap-4 flex-1">
+                <button id="mobileBackBtn" class="hidden mr-1 px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-xs font-black shadow-md flex items-center gap-1 transition-all active:scale-95">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i> LIST
+                </button>
+                <h1 class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2 truncate">
+                    <i data-lucide="book-open-check" class="text-blue-600 w-6 h-6 shrink-0"></i>
+                    <span class="hidden sm:inline">Smart <span class="text-blue-600">Dictionary</span></span>
+                </h1>
+                
+                <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 ml-2">
+                    <button id="modeDictBtn" class="px-4 py-1 rounded-lg text-xs font-bold bg-white shadow-sm text-blue-600 transition-all">辞</button>
+                    <button id="modeStudyBtn" class="px-4 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 transition-all">学</button>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="importBtn" class="p-2 bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all active:scale-95 shadow-sm" title="Import JSON">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                </button>
+                <input type="file" id="fileInput" class="hidden" accept=".json" multiple>
+                <div id="fileInfoDisplay" class="flex text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1.5 rounded-full border border-slate-100 whitespace-nowrap">
+                    <span id="activeWordCount">0</span> ITEMS
+                </div>
+            </div>
+        </header>
+
+        <!-- Main -->
+        <main class="flex-1 overflow-hidden flex flex-col md:flex-row relative">
+            
+            <!-- Sidebar (List View) -->
+            <aside id="sidebarArea" class="w-full md:w-[380px] lg:w-[440px] border-r border-slate-200 bg-white flex flex-col shadow-inner absolute md:static inset-0 z-10">
+                <div class="p-3 border-b border-slate-100 space-y-2 bg-slate-50/50">
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <i data-lucide="type" class="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 w-3.5 h-3.5"></i>
+                            <input type="text" id="searchHeadword" placeholder="見出し語..." class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/10 font-bold shadow-sm">
+                        </div>
+                        <button id="phraseModeToggle" class="phrase-toggle-btn px-3 py-2 rounded-xl text-[10px] font-black border border-slate-200 shadow-sm flex items-center gap-1 transition-colors">
+                             <i data-lucide="quote" class="w-3 h-3 text-blue-600"></i> 語句
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between px-1">
+                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                            <i data-lucide="list" class="w-3 h-3"></i>
+                            <span id="totalMatchCount">0 ITEMS</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <select id="filterMark" class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-lg px-2 py-1 outline-none shadow-sm cursor-pointer hover:border-blue-300">
+                                <option value="all">全マーク</option>
+                                <option value="red">🚩 復習</option>
+                                <option value="yellow">⭐ 注意</option>
+                                <option value="green">✅ 習得</option>
+                                <option value="none">未マーク</option>
+                            </select>
+                            <select id="sortOrder" class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-lg px-2 py-1 outline-none shadow-sm cursor-pointer hover:border-blue-300">
+                                <option value="word_asc">A-Z 順</option>
+                                <option value="word_desc">Z-A 順</option>
+                                <option value="random">🎲 乱順</option>
+                                <option value="source_asc">Src 順</option>
+                                <option value="id_asc">ID 順</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="relative group h-9 flex items-center">
+                        <button id="azLeft" class="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center bg-white/80 text-slate-400 hover:text-blue-600 z-10 rounded-l-lg cursor-pointer"><i data-lucide="chevron-left" class="w-3 h-3"></i></button>
+                        <div class="overflow-x-auto scrollbar-hide scroll-smooth w-full px-7" id="azContainer">
+                            <div class="flex gap-1.5" id="mobileAlphaFilter"></div>
+                        </div>
+                        <button id="azRight" class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center bg-white/80 text-slate-400 hover:text-blue-600 z-10 rounded-r-lg cursor-pointer"><i data-lucide="chevron-right" class="w-3 h-3"></i></button>
+                    </div>
+
+                    <div id="extraSearchDict" class="space-y-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="relative">
+                                <i data-lucide="languages" class="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 w-3.5 h-3.5"></i>
+                                <input type="text" id="searchMeaning" placeholder="意味..." class="w-full pl-9 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium shadow-sm">
+                            </div>
+                            <div class="relative">
+                                <i data-lucide="tag" class="absolute left-3 top-1/2 -translate-y-1/2 text-purple-500 w-3.5 h-3.5"></i>
+                                <input type="text" id="searchTags" placeholder="#Tags..." class="w-full pl-9 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-purple-500/10 font-medium shadow-sm">
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5"></i>
+                            <input type="text" id="searchKeyword" placeholder="KW(全体)..." class="w-full pl-9 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-slate-500/10 font-medium shadow-sm">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <select id="filterPos" class="pl-1.5 pr-1 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold outline-none shadow-sm"><option value="all">品詞</option></select>
+                        <select id="filterGrade" class="pl-1.5 pr-1 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold outline-none shadow-sm"><option value="all">Level</option></select>
+                        <select id="filterSource" class="pl-1.5 pr-1 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold outline-none shadow-sm"><option value="all">Src</option></select>
+                        <select id="filterTags" class="pl-1.5 pr-1 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold outline-none shadow-sm"><option value="all">Tags</option></select>
+                    </div>
+                </div>
+                
+                <div id="resultsList" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 bg-slate-50/20 pb-20 md:pb-3"></div>
+            </aside>
+
+            <!-- Content Area (Viewer) -->
+            <section id="contentArea" class="w-full flex-1 bg-slate-50 overflow-y-auto custom-scrollbar relative hidden md:block">
+                <div id="editorPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-10 bg-slate-50">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100"><i data-lucide="book-open" class="w-8 h-8 text-slate-300"></i></div>
+                    <h3 class="font-bold text-slate-600">Smart Dictionary Viewer</h3>
+                    <p class="text-xs mt-2 text-slate-400 text-center">リストから項目を選択して詳細を表示します。</p>
+                </div>
+
+                <div id="editorForm" class="hidden p-4 md:p-8 max-w-4xl mx-auto w-full space-y-6 pb-32">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 relative">
+                        <div class="flex items-center justify-between">
+                            <div class="flex gap-2 items-center">
+                                <span id="displayDataSource" class="id-badge">Source</span>
+                                <span id="displaySubID" class="id-badge">Sub-ID</span>
+                                <span id="displayLevel" class="hidden level-badge"></span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-1">
+                            <div id="viewWord" class="w-full px-2 py-1 font-black text-slate-900"></div>
+                            <div id="pronunciationArea" class="flex flex-col gap-1 px-2 mt-1"></div>
+                        </div>
+                        <div id="metadataDisplay" class="flex flex-wrap gap-2 pt-2 border-t border-slate-50"></div>
+                    </div>
+                    <div id="sensesContainer" class="space-y-6"></div>
+                    <div id="examplesSection" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-[10px] font-black text-purple-600 uppercase tracking-widest flex items-center gap-1"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i> SENTENCE</h3>
+                        <div id="examplesContainer" class="space-y-3"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let dictionaryData = [];
+        let editingIndex = -1;
+        let isMobileDetailView = false;
+        let isPhraseMode = false;
+        let currentMode = 'dict';
+        let markings = JSON.parse(localStorage.getItem('smart_dict_marks') || '{}');
+        let activeAlpha = 'ALL';
+        let randomSeed = Math.random();
+        
+        const defaultDataFiles = ['wordlist/DB48-std.json', 'wordlist/DB48-phr.json', 'wordlist/DB48-mul.json'];
+
+        const VISUAL_CONFIG = {
+            'usage': { title: "Usage", color: "cyan", icon: "activity", label: "活用" },
+            'related': { title: "Related", color: "indigo", icon: "link", label: "関連" },
+            'phrases': { title: "Phrases", color: "emerald", icon: "git-branch", label: "" },
+            'notes': { title: "Notes", color: "amber", icon: "info", label: "Note" },
+            'unknown': { title: "Section", color: "slate", icon: "circle", label: "" }
+        };
+
+        const els = {
+            resultsList: document.getElementById('resultsList'),
+            sidebarArea: document.getElementById('sidebarArea'),
+            contentArea: document.getElementById('contentArea'),
+            mobileBackBtn: document.getElementById('mobileBackBtn'),
+            editorPlaceholder: document.getElementById('editorPlaceholder'),
+            editorForm: document.getElementById('editorForm'),
+            viewWord: document.getElementById('viewWord'),
+            pronunciationArea: document.getElementById('pronunciationArea'),
+            displayDataSource: document.getElementById('displayDataSource'),
+            displaySubID: document.getElementById('displaySubID'),
+            displayLevel: document.getElementById('displayLevel'),
+            metadataDisplay: document.getElementById('metadataDisplay'),
+            sensesContainer: document.getElementById('sensesContainer'),
+            examplesContainer: document.getElementById('examplesContainer'),
+            totalMatchCount: document.getElementById('totalMatchCount'),
+            activeWordCount: document.getElementById('activeWordCount'),
+            searchHeadword: document.getElementById('searchHeadword'),
+            searchMeaning: document.getElementById('searchMeaning'),
+            searchTags: document.getElementById('searchTags'),
+            searchKeyword: document.getElementById('searchKeyword'),
+            filterMark: document.getElementById('filterMark'),
+            phraseModeToggle: document.getElementById('phraseModeToggle'),
+            filterPos: document.getElementById('filterPos'),
+            filterGrade: document.getElementById('filterGrade'),
+            filterSource: document.getElementById('filterSource'),
+            filterTags: document.getElementById('filterTags'),
+            sortOrder: document.getElementById('sortOrder'),
+            azContainer: document.getElementById('azContainer'),
+            mobileAlphaFilter: document.getElementById('mobileAlphaFilter'),
+            azLeft: document.getElementById('azLeft'),
+            azRight: document.getElementById('azRight'),
+            importBtn: document.getElementById('importBtn'),
+            fileInput: document.getElementById('fileInput'),
+            modeDictBtn: document.getElementById('modeDictBtn'),
+            modeStudyBtn: document.getElementById('modeStudyBtn'),
+            extraSearchDict: document.getElementById('extraSearchDict')
+        };
+
+        function init() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            initAlphaButtons();
+            loadInitialData();
+            setupEventListeners();
+        }
+
+        function saveMarkings() {
+            localStorage.setItem('smart_dict_marks', JSON.stringify(markings));
+        }
+
+        function setMarking(itemIndex, color) {
+            const item = dictionaryData[itemIndex];
+            const key = `${item.word}_${item.dataSource}_${item.subID}`;
+            if (markings[key] === color) delete markings[key];
+            else markings[key] = color;
+            saveMarkings();
+            renderList();
+        }
+
+        function getMarking(item) {
+            const key = `${item.word}_${item.dataSource}_${item.subID}`;
+            return markings[key] || null;
+        }
+
+        function standardizeItem(item, sourceName) {
+            if(!item) return null;
+            const newItem = {
+                word: item.word || item.phrase || "UNTITLED",
+                pronunciation: Array.isArray(item.pronunciation) ? item.pronunciation : [],
+                tags: item.tags || [],
+                level: item.level || "",
+                examples: Array.isArray(item.examples) ? item.examples : [],
+                dataSource: item.dataSource || sourceName || "Unknown",
+                subID: (item.subID || item.id || "").toString(),
+                senses: [],
+                subsections: item.subsections || []
+            };
+            let rawSenses = item.senses || [];
+            if (rawSenses.length === 0 && (item.definitions || item.meaning)) {
+                const defs = item.definitions || [{ meaning: item.meaning }];
+                rawSenses = [{ pos: item.pos || "", definitions: defs, subsections: item.subsections || [] }];
+            }
+            newItem.senses = rawSenses.map(s => ({
+                pos: s.pos || "",
+                definitions: (s.definitions || []).map(d => ({
+                    type: d.type || "",
+                    meaning: d.meaning || d.text || "",
+                    subsections: d.subsections || []
+                })),
+                subsections: s.subsections || []
+            }));
+            return newItem;
+        }
+
+        function shortenText(text) {
+            if (!text) return "";
+            if (text.toLowerCase().includes('level')) {
+                const num = text.replace(/[^0-9]/g, '');
+                return 'L' + num;
+            }
+            if (text.toLowerCase() === 'db48') return 'D';
+            return text.substring(0, 2).toUpperCase();
+        }
+
+        async function loadInitialData() {
+            for (const filePath of defaultDataFiles) {
+                try {
+                    const res = await fetch(filePath);
+                    if(res.ok) {
+                        const data = await res.json();
+                        const source = filePath.split('/').pop().replace('.json', '');
+                        const norm = (Array.isArray(data) ? data : [data]).map(i => standardizeItem(i, source)).filter(i=>i);
+                        dictionaryData = dictionaryData.concat(norm);
+                    }
+                } catch(e) {}
+            }
+            els.activeWordCount.innerText = dictionaryData.length;
+            updateDropdowns();
+            renderList();
+        }
+
+        async function handleFileUpload(e) {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+            for (const file of files) {
+                try {
+                    const text = await file.text();
+                    let data = JSON.parse(text);
+                    if (!Array.isArray(data)) data = [data];
+                    const sourceName = file.name.replace('.json', '');
+                    const norm = data.map(i => standardizeItem(i, sourceName)).filter(i => i);
+                    dictionaryData = dictionaryData.concat(norm);
+                } catch (err) { console.error("JSON Parse Error:", err); }
+            }
+            els.activeWordCount.innerText = dictionaryData.length;
+            updateDropdowns();
+            renderList();
+            els.fileInput.value = "";
+        }
+
+        function formatText(text) {
+            if (!text) return "";
+            let s = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            s = s.replace(/\{\{([^:]+):([^}]+)\}\}/g, (m, tag, c) => {
+                if (tag === 'dot') return `<span class="fmt-dot">${c}</span>`;
+                if (tag === 'uub') return `<span class="fmt-uub">${c}</span>`;
+                if (tag === 'od') return `<span class="fmt-od">${c}</span>`;
+                return `<span style="color:${tag}">${c}</span>`;
+            });
+            s = s.replace(/\*\*(.*?)\*\*/g, '<span class="fmt-bold">$1</span>');
+            return s;
+        }
+
+        function getPosColorClass(pos) {
+            const colors = { '名': 'text-rose-600 bg-rose-50 border-rose-200', '動': 'text-emerald-600 bg-emerald-50 border-emerald-200', '形': 'text-blue-600 bg-blue-50 border-blue-200', '副': 'text-orange-600 bg-orange-50 border-orange-200', '前': 'text-purple-600 bg-purple-50 border-purple-200', '接': 'text-cyan-600 bg-cyan-50 border-cyan-200' };
+            return colors[pos] || 'text-slate-600 bg-slate-50 border-slate-200';
+        }
+
+        function renderList() {
+            const hQ = els.searchHeadword.value.trim().toLowerCase();
+            const mQ = els.searchMeaning.value.trim().toLowerCase();
+            const tQ = els.searchTags.value.trim().toLowerCase();
+            const kQ = els.searchKeyword.value.trim().toLowerCase();
+            const markF = els.filterMark.value;
+            const posF = els.filterPos.value, sort = els.sortOrder.value, srcF = els.filterSource.value, gradeF = els.filterGrade.value, tagF = els.filterTags.value;
+
+            let filtered = dictionaryData.map((item, i) => ({ idx: i, ...item, mark: getMarking(item) })).filter(item => {
+                if (activeAlpha !== 'ALL' && !item.word.toUpperCase().startsWith(activeAlpha)) return false;
+                if (hQ && !item.word.toLowerCase().includes(hQ)) return false;
+                if (currentMode === 'dict') {
+                    if (mQ) {
+                        const allM = item.senses.flatMap(s=>s.definitions.map(d=>d.meaning)).join(' ').toLowerCase();
+                        if (!allM.includes(mQ)) return false;
+                    }
+                    if (tQ) {
+                        const allT = (item.tags || []).join(' ').toLowerCase();
+                        if (!allT.includes(tQ)) return false;
+                    }
+                    if (kQ) {
+                        const raw = JSON.stringify(item).toLowerCase();
+                        if (!raw.includes(kQ)) return false;
+                    }
+                }
+                if (markF !== 'all') {
+                    if (markF === 'none' && item.mark !== null) return false;
+                    if (markF !== 'none' && item.mark !== markF) return false;
+                }
+                if (tagF !== 'all' && !(item.tags || []).includes(tagF)) return false;
+                if (gradeF !== 'all' && item.level !== gradeF) return false;
+                if (posF !== 'all' && !item.senses.some(s => s.pos === posF)) return false;
+                if (srcF !== 'all' && item.dataSource !== srcF) return false;
+                if (isPhraseMode && !item.word.trim().includes(' ')) return false;
+                return true;
+            });
+
+            if (sort === 'random') {
+                filtered.sort((a, b) => Math.sin(a.idx + randomSeed) - Math.sin(b.idx + randomSeed));
+            } else {
+                filtered.sort((a, b) => {
+                    if (sort === 'word_asc') return a.word.localeCompare(b.word);
+                    if (sort === 'word_desc') return b.word.localeCompare(a.word);
+                    if (sort === 'source_asc') return (a.dataSource||"").localeCompare(b.dataSource||"");
+                    if (sort === 'id_asc') return (parseInt(a.subID)||0) - (parseInt(b.subID)||0);
+                    return 0;
+                });
+            }
+
+            const isStudy = currentMode === 'study';
+            els.totalMatchCount.innerText = `${filtered.length} ITEMS`;
+            els.resultsList.innerHTML = filtered.map(item => {
+                const markClass = item.mark ? `mark-${item.mark}` : 'border-white';
+                
+                return `
+                <div id="result-item-${item.idx}" onclick="openDetail(${item.idx})" class="p-3 bg-white rounded-xl border-2 cursor-pointer transition-all shadow-sm group ${item.idx === editingIndex ? 'active-selection ring-2 ring-blue-500/10' : markClass + ' hover:border-slate-200'}">
+                    <div class="flex items-start justify-between">
+                        <span class="font-black text-slate-900 group-hover:text-blue-600 uppercase truncate flex-1 block">${item.word}</span>
+                        <div class="flex gap-4 ml-2 items-center flex-shrink-0">
+                            ${isStudy ? `
+                                <div onclick="event.stopPropagation(); setMarking(${item.idx}, 'red')" class="marker-dot bg-red-400 ${item.mark==='red'?'active ring-red-200':''}"></div>
+                                <div onclick="event.stopPropagation(); setMarking(${item.idx}, 'yellow')" class="marker-dot bg-yellow-400 ${item.mark==='yellow'?'active ring-yellow-100':''}"></div>
+                                <div onclick="event.stopPropagation(); setMarking(${item.idx}, 'green')" class="marker-dot bg-green-400 ${item.mark==='green'?'active ring-green-100':''}"></div>
+                            ` : `
+                                ${item.level ? `<span class="level-badge" title="${item.level}">${shortenText(item.level)}</span>` : ''}
+                                ${item.dataSource ? `<span class="id-badge" title="${item.dataSource}">${shortenText(item.dataSource)}</span>` : ''}
+                            `}
+                        </div>
+                    </div>
+                    ${!isStudy ? `
+                    <div class="flex items-center justify-between gap-2 mt-1">
+                        <p class="text-[10px] text-slate-500 truncate flex-1">${formatText(item.senses[0]?.definitions[0]?.meaning || "")}</p>
+                        <div class="flex gap-1 flex-shrink-0">${Array.from(new Set(item.senses.map(s => s.pos).filter(p => p))).map(p => `<span class="pos-badge-box ${getPosColorClass(p)}">${p}</span>`).join('')}</div>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function openDetail(index) {
+            editingIndex = index;
+            const item = dictionaryData[index];
+            document.querySelectorAll('.active-selection').forEach(el => el.classList.remove('active-selection', 'ring-2', 'ring-blue-500/10'));
+            document.getElementById(`result-item-${index}`)?.classList.add('active-selection', 'ring-2', 'ring-blue-500/10');
+
+            els.viewWord.innerHTML = formatText(item.word);
+            els.displayDataSource.innerText = item.dataSource;
+            els.displaySubID.innerText = item.subID;
+            els.displayLevel.innerText = item.level || "";
+            els.displayLevel.classList.toggle('hidden', !item.level);
+            els.metadataDisplay.innerHTML = (item.tags || []).map(t => `<span class="tag-badge">#${t}</span>`).join('');
+            
+            els.pronunciationArea.innerHTML = (item.pronunciation || []).map(p => `
+                <div class="flex items-center gap-2">
+                    ${p.pos ? `<span class="pron-pos">${p.pos}</span>` : ''}
+                    <span class="font-serif italic text-sm text-slate-500">${p.text}</span>
+                    ${(p.notes || []).map(n => `<span class="pron-note">${n}</span>`).join('')}
+                </div>`).join('');
+
+            const rootSensesHtml = item.senses.map((s, si) => renderSenseCard(s, si)).join('');
+            const rootSubsectionsHtml = (item.subsections || []).map((sub, idx) => renderRecursiveSubsection(sub, 1)).join('');
+            els.sensesContainer.innerHTML = rootSensesHtml + (rootSubsectionsHtml ? `<div class="ml-4">${rootSubsectionsHtml}</div>` : '');
+            
+            els.examplesContainer.innerHTML = (item.examples || []).map(ex => `
+                <div class="example-card rounded-r-xl">
+                    <div class="ex-en-text text-slate-700">${formatText(ex.en)}</div>
+                    <div class="ex-ja-text text-slate-500">${formatText(ex.ja)}</div>
+                </div>`).join('');
+            
+            els.editorPlaceholder.classList.add('hidden');
+            els.editorForm.classList.remove('hidden');
+
+            if(window.innerWidth < 768) {
+                els.sidebarArea.classList.add('hidden');
+                els.contentArea.classList.remove('hidden');
+                els.mobileBackBtn.classList.remove('hidden');
+                isMobileDetailView = true;
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function renderSenseCard(s, si) {
+            const definitionsHtml = (s.definitions || []).map(d => `
+                <div class="def-item">
+                    <div class="flex gap-2 items-baseline">
+                        ${d.type ? `<span class="${d.type === '注意' ? 'label-caution' : 'type-label-text font-bold text-slate-400'}">${d.type}</span>` : ''}
+                        <div class="meaning-text">${formatText(d.meaning)}</div>
+                    </div>
+                    <div class="ml-1 space-y-1 mt-1">${(d.subsections || []).map(sub => renderRecursiveSubsection(sub, 2)).join('')}</div>
+                </div>`).join('');
+
+            return `
+            <div class="sense-card">
+                <div class="flex items-center gap-1.5 mb-2">
+                    <i data-lucide="tag" class="w-4 h-4 text-slate-400"></i>
+                    <span class="pos-badge-def ${getPosColorClass(s.pos)}">${s.pos || '---'}</span>
+                </div>
+                <div class="flex items-center justify-between pb-1 mt-1 border-b border-slate-50 mb-2">
+                    <span class="text-xs font-black text-blue-600 uppercase flex items-center gap-1"><i data-lucide="book-open" class="w-4 h-4"></i> MEANING</span>
+                </div>
+                <div class="space-y-1">${definitionsHtml}</div>
+                ${(s.subsections || []).map(sub => renderRecursiveSubsection(sub, 1)).join('')}
+            </div>`;
+        }
+
+        function renderRecursiveSubsection(sub, level) {
+            const config = VISUAL_CONFIG[sub.type] || VISUAL_CONFIG['unknown'];
+            const title = sub.title || config.title;
+            const isNote = sub.type === 'notes';
+            const items = (sub.items || []).filter(it => it.content || (it.subSenses && it.subSenses.length > 0));
+            if (items.length === 0) return '';
+            const headerHtml = level === 1 ? `<label class="type-label-text font-black text-${config.color}-600 uppercase flex items-center gap-1 mb-1 mt-3"><i data-lucide="${config.icon}" class="w-3 h-3"></i> ${title}</label>` : '';
+            const wrapperClass = `ml-8 mt-1.5`;
+
+            return `
+            <div class="${wrapperClass}">
+                ${headerHtml}
+                <div class="pl-0.5">
+                    ${items.map(it => `
+                        <div class="item-box theme-${config.color}">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                ${it.type ? `<span class="type-label-text font-bold px-1 rounded ${it.type === '注意' ? 'label-caution' : 'label-normal'}">${it.type}</span>` : ''}
+                                ${it.label ? `<span class="type-label-text font-bold text-${config.color}-600 border border-${config.color}-100 bg-${config.color}-50 px-1 rounded">${it.label}</span>` : ''}
+                                <span class="rel-word-text text-slate-800 ${isNote ? 'font-medium' : 'font-black'}">${formatText(it.content || "")}</span>
+                                ${it.pronunciation?.[0] ? `<span class="text-[11px] font-serif italic text-slate-500">${it.pronunciation[0].text}</span>` : ''}
+                            </div>
+                            <div class="ml-10">
+                                ${(it.subSenses || []).map(ss => `<div class="mt-1 flex items-baseline gap-2">${ss.pos ? `<span class="pos-badge-box ${getPosColorClass(ss.pos)}">${ss.pos}</span>` : ''}<div class="meaning-text">${ss.meanings.map(m => formatText(m)).join(' ')}</div></div>`).join('')}
+                                <div class="mt-1 border-l-2 border-slate-100">${(it.subsections || []).map(child => renderRecursiveSubsection(child, level + 1)).join('')}</div>
+                            </div>
+                        </div>`).join('')}
+                </div>
+            </div>`;
+        }
+
+        function updateDropdowns() {
+            const pos = new Set(), src = new Set(), tags = new Set(), grades = new Set();
+            dictionaryData.forEach(i => { 
+                if(i.dataSource) src.add(i.dataSource); 
+                if(i.level) grades.add(i.level);
+                i.senses.forEach(s => { if(s.pos) pos.add(s.pos); });
+                (i.tags || []).forEach(t => tags.add(t));
+            });
+            els.filterPos.innerHTML = '<option value="all">品詞</option>' + Array.from(pos).sort().map(p => `<option value="${p}">${p}</option>`).join('');
+            els.filterSource.innerHTML = '<option value="all">Src</option>' + Array.from(src).sort().map(s => `<option value="${s}">${s}</option>`).join('');
+            els.filterTags.innerHTML = '<option value="all">Tags</option>' + Array.from(tags).sort().map(t => `<option value="${t}">${t}</option>`).join('');
+            els.filterGrade.innerHTML = '<option value="all">Level</option>' + Array.from(grades).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).map(g => `<option value="${g}">${g}</option>`).join('');
+        }
+        
+        function initAlphaButtons() {
+            els.mobileAlphaFilter.innerHTML = ['ALL', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(c => 
+                `<button onclick="scrollToChar('${c}')" class="az-btn flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 font-bold text-xs border border-slate-200 ${c === 'ALL' ? 'active' : ''}">${c}</button>`
+            ).join('');
+        }
+        
+        window.scrollToChar = (c) => {
+            activeAlpha = c;
+            document.querySelectorAll('.az-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === c));
+            renderList();
+        }
+        
+        function setupEventListeners() {
+            ['searchHeadword', 'searchMeaning', 'searchTags', 'searchKeyword', 'filterPos', 'filterTags', 'sortOrder', 'filterSource', 'filterGrade', 'filterMark'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', () => {
+                    if (id === 'sortOrder' && document.getElementById(id).value === 'random') randomSeed = Math.random();
+                    renderList();
+                });
+            });
+            els.phraseModeToggle.addEventListener('click', () => {
+                isPhraseMode = !isPhraseMode;
+                els.phraseModeToggle.classList.toggle('bg-blue-600');
+                els.phraseModeToggle.classList.toggle('text-white');
+                renderList();
+            });
+            els.mobileBackBtn.addEventListener('click', () => {
+                isMobileDetailView = false;
+                els.contentArea.classList.add('hidden');
+                els.sidebarArea.classList.remove('hidden');
+                els.mobileBackBtn.classList.add('hidden');
+            });
+            els.azLeft.onclick = () => els.azContainer.scrollBy({left: -120, behavior: 'smooth'});
+            els.azRight.onclick = () => els.azContainer.scrollBy({left: 120, behavior: 'smooth'});
+            els.importBtn.onclick = () => els.fileInput.click();
+            els.fileInput.onchange = handleFileUpload;
+
+            els.modeDictBtn.onclick = () => {
+                currentMode = 'dict';
+                els.modeDictBtn.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
+                els.modeStudyBtn.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
+                els.extraSearchDict.classList.remove('hidden');
+                renderList();
+            };
+            els.modeStudyBtn.onclick = () => {
+                currentMode = 'study';
+                els.modeStudyBtn.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
+                els.modeDictBtn.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
+                els.extraSearchDict.classList.add('hidden');
+                renderList();
+            };
+        }
+
+        init();
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

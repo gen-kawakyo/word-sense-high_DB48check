@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Textbook Dictionary - Study Mode</title>
+    <title>Smart Textbook Dictionary</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -15,9 +15,9 @@
             --word-font-size: 1.875rem;
             --content-font-size: 0.85rem;
             --type-font-size: 0.7rem;
-            --rel-word-size: 0.8rem;
-            --ex-en-font-size: 0.875rem;
-            --ex-ja-font-size: 0.75rem;
+            --rel-word-size: 0.9rem;
+            --ex-en-text-size: 0.875rem;
+            --ex-ja-text-size: 0.75rem;
         }
 
         body {
@@ -32,8 +32,8 @@
         .meaning-text { font-size: var(--content-font-size); font-weight: 400; color: #334155; }
         .type-label-text { font-size: var(--type-font-size); }
         .rel-word-text { font-size: var(--rel-word-size); }
-        .ex-en-text { font-size: var(--ex-en-font-size); line-height: 1.4; font-weight: 800; }
-        .ex-ja-text { font-size: var(--ex-ja-font-size); font-weight: 400; }
+        .ex-en-text { font-size: var(--ex-en-text-size); line-height: 1.4; font-weight: 800; }
+        .ex-ja-text { font-size: var(--ex-ja-text-size); font-weight: 400; }
 
         .fmt-bold { font-weight: 800; }
         .fmt-dot { border-bottom: 2px dotted currentColor; }
@@ -79,15 +79,14 @@
 
         .active-selection { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
         .id-badge { font-size: 9px; font-weight: 800; padding: 1px 4px; border-radius: 4px; border: 1px solid #e2e8f0; color: #94a3b8; text-transform: uppercase; background: #fff; line-height: 1; }
-        .pos-badge-def { font-size: 0.85rem; font-weight: 700; padding: 0px 4px; border-radius: 4px; line-height: 1.4; border: 1px solid currentColor; background-color: #fff; }
-        .pos-badge-box { font-size: var(--type-font-size); font-weight: 700; padding: 1px 5px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap; }
+        .pos-badge-box { font-size: var(--type-font-size); font-weight: 900; padding: 1px 5px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap; }
         .tag-badge { font-size: 0.75rem; font-weight: 700; color: #64748b; background-color: #f1f5f9; padding: 2px 6px; border-radius: 6px; }
         .level-badge { font-size: 9px; font-weight: 800; color: #fff; background-color: #6366f1; padding: 2px 5px; border-radius: 4px; line-height: 1; }
         
         .label-normal { color: #475569; background-color: #f1f5f9; border: 1px solid #cbd5e1; font-weight: 700; }
         .label-caution { color: #ea580c; font-weight: 700; font-size: 0.8rem !important; }
 
-        .example-card { border-left: 4px solid #a78bfa; background-color: #f5f3ff; padding: 0.5rem; margin-bottom: 0.25rem; border-radius: 0 0.5rem 0.5rem 0; }
+        .example-card { border-left: 4px solid #a78bfa; background-color: #f5f3ff; padding: 0.5rem; margin-bottom: 0.25rem; border-radius: 0 0.5rem 0.5rem 0; transition: all 0.2s; }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -108,36 +107,38 @@
     <div class="h-screen flex flex-col overflow-hidden">
         <!-- Header -->
         <header class="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between shadow-sm z-50 shrink-0 h-14">
-            <div class="flex items-center gap-2 md:gap-4 flex-1">
-                <button id="mobileBackBtn" class="hidden mr-1 px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-xs font-black shadow-md flex items-center gap-1 transition-all active:scale-95">
+            <div class="flex items-center gap-2 flex-1 overflow-hidden">
+                <button id="mobileBackBtn" class="hidden mr-1 px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-xs font-black shadow-md flex items-center gap-1 transition-all active:scale-95 shrink-0">
                     <i data-lucide="chevron-left" class="w-4 h-4"></i> LIST
                 </button>
-                <h1 class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2 truncate">
+                <h1 id="appTitle" class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2 truncate">
                     <i data-lucide="book-open-check" class="text-blue-600 w-6 h-6 shrink-0"></i>
-                    <span class="hidden sm:inline">Smart <span class="text-blue-600">Dictionary</span></span>
+                    <span>Smart<span class="text-blue-600">Dic</span></span>
                 </h1>
-                
-                <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 ml-2">
-                    <button id="modeDictBtn" class="px-4 py-1 rounded-lg text-xs font-bold bg-white shadow-sm text-blue-600 transition-all">辞</button>
-                    <button id="modeStudyBtn" class="px-4 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 transition-all">学</button>
-                </div>
             </div>
 
-            <div class="flex items-center gap-2">
-                <button id="importBtn" class="p-2 bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all active:scale-95 shadow-sm" title="Import JSON">
+            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 mx-2 shrink-0">
+                <button id="modeDictBtn" class="px-4 py-1 rounded-lg text-xs font-bold bg-white shadow-sm text-blue-600 transition-all">辞</button>
+                <button id="modeStudyBtn" class="px-4 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 transition-all">学</button>
+            </div>
+
+            <div id="headerRight" class="flex items-center gap-2 flex-1 justify-end">
+                <div id="navButtons" class="hidden flex items-center gap-2 mr-2">
+                    <button id="prevDetailBtn" class="p-2 bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all active:scale-95 disabled:opacity-30" title="Previous">
+                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </button>
+                    <button id="nextDetailBtn" class="p-2 bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all active:scale-95 disabled:opacity-30" title="Next">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <button id="importBtn" class="p-2 bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all active:scale-95 shadow-sm shrink-0" title="Import JSON">
                     <i data-lucide="upload" class="w-4 h-4"></i>
                 </button>
                 <input type="file" id="fileInput" class="hidden" accept=".json" multiple>
-                <div id="fileInfoDisplay" class="flex text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1.5 rounded-full border border-slate-100 whitespace-nowrap">
-                    <span id="activeWordCount">0</span> ITEMS
-                </div>
             </div>
         </header>
 
-        <!-- Main -->
         <main class="flex-1 overflow-hidden flex flex-col md:flex-row relative">
-            
-            <!-- Sidebar (List View) -->
             <aside id="sidebarArea" class="w-full md:w-[380px] lg:w-[440px] border-r border-slate-200 bg-white flex flex-col shadow-inner absolute md:static inset-0 z-10">
                 <div class="p-3 border-b border-slate-100 space-y-2 bg-slate-50/50">
                     <div class="flex gap-2">
@@ -150,20 +151,19 @@
                         </button>
                     </div>
 
-                    <div class="flex items-center justify-between px-1">
-                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400">
-                            <i data-lucide="list" class="w-3 h-3"></i>
-                            <span id="totalMatchCount">0 ITEMS</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <select id="filterMark" class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-lg px-2 py-1 outline-none shadow-sm cursor-pointer hover:border-blue-300">
+                    <div class="flex items-center gap-2 px-1">
+                        <button id="ttsPlayListBtn" class="h-9 w-9 flex items-center justify-center bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm shrink-0" title="Listen all from selection">
+                            <i data-lucide="volume-2" class="w-5 h-5"></i>
+                        </button>
+                        <div class="flex items-center gap-1.5 flex-1 justify-end">
+                            <select id="filterMark" class="h-9 bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-lg px-2 py-1 outline-none shadow-sm cursor-pointer hover:border-blue-300">
                                 <option value="all">全マーク</option>
                                 <option value="red">🚩 復習</option>
                                 <option value="yellow">⭐ 注意</option>
                                 <option value="green">✅ 習得</option>
                                 <option value="none">未マーク</option>
                             </select>
-                            <select id="sortOrder" class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-lg px-2 py-1 outline-none shadow-sm cursor-pointer hover:border-blue-300">
+                            <select id="sortOrder" class="h-9 bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-lg px-2 py-1 outline-none shadow-sm cursor-pointer hover:border-blue-300">
                                 <option value="word_asc">A-Z 順</option>
                                 <option value="word_desc">Z-A 順</option>
                                 <option value="random">🎲 乱順</option>
@@ -209,7 +209,6 @@
                 <div id="resultsList" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 bg-slate-50/20 pb-20 md:pb-3"></div>
             </aside>
 
-            <!-- Content Area (Viewer) -->
             <section id="contentArea" class="w-full flex-1 bg-slate-50 overflow-y-auto custom-scrollbar relative hidden md:block">
                 <div id="editorPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-10 bg-slate-50">
                     <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100"><i data-lucide="book-open" class="w-8 h-8 text-slate-300"></i></div>
@@ -227,7 +226,12 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-1 gap-1">
-                            <div id="viewWord" class="w-full px-2 py-1 font-black text-slate-900"></div>
+                            <div class="flex items-start justify-between gap-4">
+                                <div id="viewWord" class="flex-1 px-2 py-1 font-black text-slate-900"></div>
+                                <button id="ttsPlaySingleBtn" class="mt-2 p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm shrink-0" title="Speak word">
+                                    <i data-lucide="volume-2" class="w-6 h-6"></i>
+                                </button>
+                            </div>
                             <div id="pronunciationArea" class="flex flex-col gap-1 px-2 mt-1"></div>
                         </div>
                         <div id="metadataDisplay" class="flex flex-wrap gap-2 pt-2 border-t border-slate-50"></div>
@@ -244,6 +248,7 @@
 
     <script>
         let dictionaryData = [];
+        let filteredIndices = [];
         let editingIndex = -1;
         let isMobileDetailView = false;
         let isPhraseMode = false;
@@ -252,6 +257,13 @@
         let activeAlpha = 'ALL';
         let randomSeed = Math.random();
         
+        let isTtsPlayingList = false;
+        let ttsQueueIndex = 0;
+        let ttsTimeout = null;
+        let isTtsPlayingEx = false;
+        let ttsMasterExIdx = -1; // 現在連続再生を開始した例文のインデックス
+        let preferredVoice = null;
+
         const defaultDataFiles = ['wordlist/DB48-std.json', 'wordlist/DB48-phr.json', 'wordlist/DB48-mul.json'];
 
         const VISUAL_CONFIG = {
@@ -267,6 +279,11 @@
             sidebarArea: document.getElementById('sidebarArea'),
             contentArea: document.getElementById('contentArea'),
             mobileBackBtn: document.getElementById('mobileBackBtn'),
+            appTitle: document.getElementById('appTitle'),
+            navButtons: document.getElementById('navButtons'),
+            prevDetailBtn: document.getElementById('prevDetailBtn'),
+            nextDetailBtn: document.getElementById('nextDetailBtn'),
+            importBtn: document.getElementById('importBtn'),
             editorPlaceholder: document.getElementById('editorPlaceholder'),
             editorForm: document.getElementById('editorForm'),
             viewWord: document.getElementById('viewWord'),
@@ -277,8 +294,6 @@
             metadataDisplay: document.getElementById('metadataDisplay'),
             sensesContainer: document.getElementById('sensesContainer'),
             examplesContainer: document.getElementById('examplesContainer'),
-            totalMatchCount: document.getElementById('totalMatchCount'),
-            activeWordCount: document.getElementById('activeWordCount'),
             searchHeadword: document.getElementById('searchHeadword'),
             searchMeaning: document.getElementById('searchMeaning'),
             searchTags: document.getElementById('searchTags'),
@@ -294,11 +309,12 @@
             mobileAlphaFilter: document.getElementById('mobileAlphaFilter'),
             azLeft: document.getElementById('azLeft'),
             azRight: document.getElementById('azRight'),
-            importBtn: document.getElementById('importBtn'),
             fileInput: document.getElementById('fileInput'),
             modeDictBtn: document.getElementById('modeDictBtn'),
             modeStudyBtn: document.getElementById('modeStudyBtn'),
-            extraSearchDict: document.getElementById('extraSearchDict')
+            extraSearchDict: document.getElementById('extraSearchDict'),
+            ttsPlayListBtn: document.getElementById('ttsPlayListBtn'),
+            ttsPlaySingleBtn: document.getElementById('ttsPlaySingleBtn')
         };
 
         function init() {
@@ -306,6 +322,22 @@
             initAlphaButtons();
             loadInitialData();
             setupEventListeners();
+            initTtsVoices();
+        }
+
+        function initTtsVoices() {
+            const setBestVoice = () => {
+                const voices = window.speechSynthesis.getVoices();
+                preferredVoice = 
+                    voices.find(v => v.lang === 'en-US' && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Zira'))) ||
+                    voices.find(v => v.lang === 'en-GB' && (v.name.includes('Female') || v.name.includes('Google'))) ||
+                    voices.find(v => v.lang.startsWith('en') && (v.name.toLowerCase().includes('female') || v.name.includes('Zira') || v.name.includes('Samantha'))) ||
+                    voices.find(v => v.lang.startsWith('en'));
+            };
+            setBestVoice();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = setBestVoice;
+            }
         }
 
         function saveMarkings() {
@@ -378,7 +410,16 @@
                     }
                 } catch(e) {}
             }
-            els.activeWordCount.innerText = dictionaryData.length;
+            onDataLoaded();
+        }
+
+        function onDataLoaded() {
+            activeAlpha = 'ALL';
+            els.searchHeadword.value = '';
+            els.searchMeaning.value = '';
+            els.searchTags.value = '';
+            els.searchKeyword.value = '';
+            document.querySelectorAll('.az-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === 'ALL'));
             updateDropdowns();
             renderList();
         }
@@ -396,15 +437,13 @@
                     dictionaryData = dictionaryData.concat(norm);
                 } catch (err) { console.error("JSON Parse Error:", err); }
             }
-            els.activeWordCount.innerText = dictionaryData.length;
-            updateDropdowns();
-            renderList();
             els.fileInput.value = "";
+            onDataLoaded();
         }
 
         function formatText(text) {
             if (!text) return "";
-            let s = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            let s = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/ >/g, "&gt;");
             s = s.replace(/\{\{([^:]+):([^}]+)\}\}/g, (m, tag, c) => {
                 if (tag === 'dot') return `<span class="fmt-dot">${c}</span>`;
                 if (tag === 'uub') return `<span class="fmt-uub">${c}</span>`;
@@ -421,6 +460,8 @@
         }
 
         function renderList() {
+            if(isTtsPlayingList || isTtsPlayingEx) stopTtsList();
+
             const hQ = els.searchHeadword.value.trim().toLowerCase();
             const mQ = els.searchMeaning.value.trim().toLowerCase();
             const tQ = els.searchTags.value.trim().toLowerCase();
@@ -469,11 +510,10 @@
                 });
             }
 
+            filteredIndices = filtered.map(item => item.idx);
             const isStudy = currentMode === 'study';
-            els.totalMatchCount.innerText = `${filtered.length} ITEMS`;
             els.resultsList.innerHTML = filtered.map(item => {
                 const markClass = item.mark ? `mark-${item.mark}` : 'border-white';
-                
                 return `
                 <div id="result-item-${item.idx}" onclick="openDetail(${item.idx})" class="p-3 bg-white rounded-xl border-2 cursor-pointer transition-all shadow-sm group ${item.idx === editingIndex ? 'active-selection ring-2 ring-blue-500/10' : markClass + ' hover:border-slate-200'}">
                     <div class="flex items-start justify-between">
@@ -497,13 +537,20 @@
                 </div>`;
             }).join('');
             if (typeof lucide !== 'undefined') lucide.createIcons();
+            updateHeaderNav();
         }
 
         function openDetail(index) {
             editingIndex = index;
             const item = dictionaryData[index];
+            if (!item) return;
+
             document.querySelectorAll('.active-selection').forEach(el => el.classList.remove('active-selection', 'ring-2', 'ring-blue-500/10'));
-            document.getElementById(`result-item-${index}`)?.classList.add('active-selection', 'ring-2', 'ring-blue-500/10');
+            const targetEl = document.getElementById(`result-item-${index}`);
+            if (targetEl) {
+                targetEl.classList.add('active-selection', 'ring-2', 'ring-blue-500/10');
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
 
             els.viewWord.innerHTML = formatText(item.word);
             els.displayDataSource.innerText = item.dataSource;
@@ -523,9 +570,17 @@
             const rootSubsectionsHtml = (item.subsections || []).map((sub, idx) => renderRecursiveSubsection(sub, 1)).join('');
             els.sensesContainer.innerHTML = rootSensesHtml + (rootSubsectionsHtml ? `<div class="ml-4">${rootSubsectionsHtml}</div>` : '');
             
-            els.examplesContainer.innerHTML = (item.examples || []).map(ex => `
-                <div class="example-card rounded-r-xl">
-                    <div class="ex-en-text text-slate-700">${formatText(ex.en)}</div>
+            els.examplesContainer.innerHTML = (item.examples || []).map((ex, idx) => `
+                <div class="example-card rounded-r-xl relative group/ex">
+                    <div class="absolute right-2 top-2 flex gap-2">
+                        <button onclick="speakExample(${idx}, false)" class="p-1.5 bg-white/80 hover:bg-blue-600 hover:text-white rounded-lg transition-all text-slate-400" title="Play once">
+                            <i data-lucide="volume-1" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button id="ex-cont-btn-${idx}" onclick="speakExample(${idx}, true)" class="ex-cont-btn p-1.5 bg-white/80 hover:bg-purple-600 hover:text-white rounded-lg transition-all text-slate-400" title="Play continuous from here">
+                            <i data-lucide="play-circle" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <div id="ex-en-${idx}" class="ex-en-text text-slate-700 pr-16">${formatText(ex.en)}</div>
                     <div class="ex-ja-text text-slate-500">${formatText(ex.ja)}</div>
                 </div>`).join('');
             
@@ -536,16 +591,41 @@
                 els.sidebarArea.classList.add('hidden');
                 els.contentArea.classList.remove('hidden');
                 els.mobileBackBtn.classList.remove('hidden');
+                els.appTitle.classList.add('hidden');
+                els.importBtn.classList.add('hidden');
+                els.navButtons.classList.remove('hidden');
                 isMobileDetailView = true;
+            } else {
+                els.navButtons.classList.remove('hidden');
             }
+            updateHeaderNav();
             if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            // 連続再生中であればアイコンを更新
+            if (isTtsPlayingEx && ttsMasterExIdx !== -1) {
+                updateExContIcon(ttsMasterExIdx, true);
+            }
+        }
+
+        function updateHeaderNav() {
+            const currentPos = filteredIndices.indexOf(editingIndex);
+            els.prevDetailBtn.disabled = currentPos <= 0;
+            els.nextDetailBtn.disabled = currentPos < 0 || currentPos >= filteredIndices.length - 1;
+        }
+
+        function navigateDetails(dir) {
+            const currentPos = filteredIndices.indexOf(editingIndex);
+            const nextPos = currentPos + dir;
+            if (nextPos >= 0 && nextPos < filteredIndices.length) {
+                openDetail(filteredIndices[nextPos]);
+            }
         }
 
         function renderSenseCard(s, si) {
             const definitionsHtml = (s.definitions || []).map(d => `
                 <div class="def-item">
                     <div class="flex gap-2 items-baseline">
-                        ${d.type ? `<span class="${d.type === '注意' ? 'label-caution' : 'type-label-text font-bold text-slate-400'}">${d.type}</span>` : ''}
+                        ${d.type ? `<span class="${d.type === '注意' ? 'label-caution' : 'type-label-text font-black text-slate-400'}">${d.type}</span>` : ''}
                         <div class="meaning-text">${formatText(d.meaning)}</div>
                     </div>
                     <div class="ml-1 space-y-1 mt-1">${(d.subsections || []).map(sub => renderRecursiveSubsection(sub, 2)).join('')}</div>
@@ -555,7 +635,7 @@
             <div class="sense-card">
                 <div class="flex items-center gap-1.5 mb-2">
                     <i data-lucide="tag" class="w-4 h-4 text-slate-400"></i>
-                    <span class="pos-badge-def ${getPosColorClass(s.pos)}">${s.pos || '---'}</span>
+                    <span class="pos-badge-box font-black ${getPosColorClass(s.pos)}">${s.pos || '---'}</span>
                 </div>
                 <div class="flex items-center justify-between pb-1 mt-1 border-b border-slate-50 mb-2">
                     <span class="text-xs font-black text-blue-600 uppercase flex items-center gap-1"><i data-lucide="book-open" class="w-4 h-4"></i> MEANING</span>
@@ -572,7 +652,7 @@
             const items = (sub.items || []).filter(it => it.content || (it.subSenses && it.subSenses.length > 0));
             if (items.length === 0) return '';
             const headerHtml = level === 1 ? `<label class="type-label-text font-black text-${config.color}-600 uppercase flex items-center gap-1 mb-1 mt-3"><i data-lucide="${config.icon}" class="w-3 h-3"></i> ${title}</label>` : '';
-            const wrapperClass = `ml-8 mt-1.5`;
+            const wrapperClass = `ml-4 mt-1.5`;
 
             return `
             <div class="${wrapperClass}">
@@ -581,13 +661,13 @@
                     ${items.map(it => `
                         <div class="item-box theme-${config.color}">
                             <div class="flex items-center gap-2 flex-wrap">
-                                ${it.type ? `<span class="type-label-text font-bold px-1 rounded ${it.type === '注意' ? 'label-caution' : 'label-normal'}">${it.type}</span>` : ''}
-                                ${it.label ? `<span class="type-label-text font-bold text-${config.color}-600 border border-${config.color}-100 bg-${config.color}-50 px-1 rounded">${it.label}</span>` : ''}
+                                ${it.type ? `<span class="type-label-text font-black px-1 rounded ${it.type === '注意' ? 'label-caution' : 'label-normal'}">${it.type}</span>` : ''}
+                                ${it.label ? `<span class="type-label-text font-black text-${config.color}-600 border border-${config.color}-100 bg-${config.color}-50 px-1 rounded">${it.label}</span>` : ''}
                                 <span class="rel-word-text text-slate-800 ${isNote ? 'font-medium' : 'font-black'}">${formatText(it.content || "")}</span>
                                 ${it.pronunciation?.[0] ? `<span class="text-[11px] font-serif italic text-slate-500">${it.pronunciation[0].text}</span>` : ''}
                             </div>
                             <div class="ml-10">
-                                ${(it.subSenses || []).map(ss => `<div class="mt-1 flex items-baseline gap-2">${ss.pos ? `<span class="pos-badge-box ${getPosColorClass(ss.pos)}">${ss.pos}</span>` : ''}<div class="meaning-text">${ss.meanings.map(m => formatText(m)).join(' ')}</div></div>`).join('')}
+                                ${(it.subSenses || []).map(ss => `<div class="mt-1 flex items-baseline gap-2">${ss.pos ? `<span class="pos-badge-box font-black ${getPosColorClass(ss.pos)}">${ss.pos}</span>` : ''}<div class="meaning-text">${ss.meanings.map(m => formatText(m)).join(' ')}</div></div>`).join('')}
                                 <div class="mt-1 border-l-2 border-slate-100">${(it.subsections || []).map(child => renderRecursiveSubsection(child, level + 1)).join('')}</div>
                             </div>
                         </div>`).join('')}
@@ -620,6 +700,141 @@
             document.querySelectorAll('.az-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === c));
             renderList();
         }
+
+        function speakText(text, onEndCallback) {
+            window.speechSynthesis.cancel();
+            const ut = new SpeechSynthesisUtterance(text);
+            ut.lang = 'en-US';
+            ut.rate = 0.9;
+            ut.pitch = 1.3; 
+            if (preferredVoice) ut.voice = preferredVoice;
+            if(onEndCallback) ut.onend = onEndCallback;
+            window.speechSynthesis.speak(ut);
+        }
+
+        function stopTtsList() {
+            isTtsPlayingList = false;
+            isTtsPlayingEx = false;
+            ttsMasterExIdx = -1;
+            if(ttsTimeout) clearTimeout(ttsTimeout);
+            window.speechSynthesis.cancel();
+            
+            // リスト再生ボタンのリセット
+            els.ttsPlayListBtn.innerHTML = '<i data-lucide="volume-2" class="w-5 h-5"></i>';
+            els.ttsPlayListBtn.className = els.ttsPlayListBtn.className.replace('bg-red-600', 'bg-white').replace('text-white', 'text-slate-600');
+            
+            // 例文カードとボタンのリセット
+            document.querySelectorAll('.example-card').forEach(el => el.classList.remove('ring-2', 'ring-blue-500'));
+            document.querySelectorAll('.ex-cont-btn').forEach(btn => {
+                btn.innerHTML = '<i data-lucide="play-circle" class="w-3.5 h-3.5"></i>';
+                btn.classList.remove('bg-purple-600', 'text-white');
+                btn.classList.add('bg-white/80', 'text-slate-400');
+            });
+            lucide.createIcons();
+        }
+
+        function startTtsList() {
+            if(filteredIndices.length === 0) return;
+            isTtsPlayingList = true;
+            const startIdx = filteredIndices.indexOf(editingIndex);
+            ttsQueueIndex = startIdx >= 0 ? startIdx : 0;
+            
+            els.ttsPlayListBtn.innerHTML = '<i data-lucide="square" class="w-5 h-5"></i>';
+            els.ttsPlayListBtn.className = els.ttsPlayListBtn.className.replace('bg-white', 'bg-red-600').replace('text-slate-600', 'text-white');
+            lucide.createIcons();
+            readNextInList();
+        }
+
+        function readNextInList() {
+            if(!isTtsPlayingList || ttsQueueIndex >= filteredIndices.length) {
+                stopTtsList();
+                return;
+            }
+            const dataIndex = filteredIndices[ttsQueueIndex];
+            openDetail(dataIndex);
+            
+            speakText(dictionaryData[dataIndex].word, () => {
+                if(!isTtsPlayingList) return;
+                ttsQueueIndex++;
+                ttsTimeout = setTimeout(readNextInList, 2000);
+            });
+        }
+
+        function updateExContIcon(idx, isActive) {
+            const btn = document.getElementById(`ex-cont-btn-${idx}`);
+            if (!btn) return;
+            if (isActive) {
+                btn.innerHTML = '<i data-lucide="square" class="w-3.5 h-3.5"></i>';
+                btn.classList.remove('bg-white/80', 'text-slate-400');
+                btn.classList.add('bg-purple-600', 'text-white');
+            } else {
+                btn.innerHTML = '<i data-lucide="play-circle" class="w-3.5 h-3.5"></i>';
+                btn.classList.add('bg-white/80', 'text-slate-400');
+                btn.classList.remove('bg-purple-600', 'text-white');
+            }
+            lucide.createIcons();
+        }
+
+        window.speakExample = (index, continuePlay, isAutoNext = false) => {
+            const item = dictionaryData[editingIndex];
+            if (!item || !item.examples[index]) return;
+
+            // 通常のクリック時（自動遷移でない時）で、すでに同じボタンが押されたら停止
+            if (!isAutoNext && continuePlay && isTtsPlayingEx && ttsMasterExIdx === index) {
+                stopTtsList();
+                return;
+            }
+
+            // 自動遷移でない場合は一旦すべて停止（初期化）
+            if (!isAutoNext) {
+                stopTtsList(); 
+            }
+
+            if (continuePlay) {
+                isTtsPlayingEx = true;
+                ttsMasterExIdx = index;
+                // 自動遷移後もアイコン状態を正しくセットするためにsetTimeoutでDOM確定を待つ（安全策）
+                setTimeout(() => updateExContIcon(index, true), 10);
+
+                const playSequence = (idx) => {
+                    if (!isTtsPlayingEx) return;
+
+                    // その単語の末尾に到達
+                    if (idx >= item.examples.length) {
+                        const currentPos = filteredIndices.indexOf(editingIndex);
+                        if (currentPos < filteredIndices.length - 1) {
+                            const nextDataIndex = filteredIndices[currentPos + 1];
+                            openDetail(nextDataIndex);
+                            // 遷移後に最初の例文から再開。isAutoNextフラグをtrueにして呼ぶ
+                            ttsTimeout = setTimeout(() => {
+                                speakExample(0, true, true);
+                            }, 1000);
+                        } else {
+                            stopTtsList();
+                        }
+                        return;
+                    }
+
+                    document.querySelectorAll('.example-card').forEach(el => el.classList.remove('ring-2', 'ring-blue-500'));
+                    const card = document.querySelectorAll('.example-card')[idx];
+                    if (card) {
+                        card.classList.add('ring-2', 'ring-blue-500');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+
+                    const cleanText = item.examples[idx].en.replace(/\{\{[^:]+:([^}]+)\}\}/g, '$1');
+                    speakText(cleanText, () => {
+                        if (isTtsPlayingEx) {
+                            ttsTimeout = setTimeout(() => playSequence(idx + 1), 1200);
+                        }
+                    });
+                };
+                playSequence(index);
+            } else {
+                const cleanText = item.examples[index].en.replace(/\{\{[^:]+:([^}]+)\}\}/g, '$1');
+                speakText(cleanText);
+            }
+        }
         
         function setupEventListeners() {
             ['searchHeadword', 'searchMeaning', 'searchTags', 'searchKeyword', 'filterPos', 'filterTags', 'sortOrder', 'filterSource', 'filterGrade', 'filterMark'].forEach(id => {
@@ -639,10 +854,18 @@
                 els.contentArea.classList.add('hidden');
                 els.sidebarArea.classList.remove('hidden');
                 els.mobileBackBtn.classList.add('hidden');
+                els.appTitle.classList.remove('hidden');
+                els.importBtn.classList.remove('hidden');
+                els.navButtons.classList.add('hidden');
+                stopTtsList();
             });
+
+            els.prevDetailBtn.onclick = () => { stopTtsList(); navigateDetails(-1); };
+            els.nextDetailBtn.onclick = () => { stopTtsList(); navigateDetails(1); };
+
             els.azLeft.onclick = () => els.azContainer.scrollBy({left: -120, behavior: 'smooth'});
             els.azRight.onclick = () => els.azContainer.scrollBy({left: 120, behavior: 'smooth'});
-            els.importBtn.onclick = () => els.fileInput.click();
+            els.importBtn.onclick = () => { stopTtsList(); els.fileInput.click(); };
             els.fileInput.onchange = handleFileUpload;
 
             els.modeDictBtn.onclick = () => {
@@ -658,6 +881,18 @@
                 els.modeDictBtn.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
                 els.extraSearchDict.classList.add('hidden');
                 renderList();
+            };
+
+            els.ttsPlayListBtn.onclick = () => {
+                if(isTtsPlayingList) stopTtsList();
+                else startTtsList();
+            };
+
+            els.ttsPlaySingleBtn.onclick = () => {
+                if(editingIndex !== -1) {
+                    stopTtsList();
+                    speakText(dictionaryData[editingIndex].word);
+                }
             };
         }
 

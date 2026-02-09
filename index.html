@@ -540,7 +540,7 @@
             updateHeaderNav();
         }
 
-        function openDetail(index) {
+        function openDetail(index, suppressViewSwitch = false) {
             editingIndex = index;
             const item = dictionaryData[index];
             if (!item) return;
@@ -587,21 +587,24 @@
             els.editorPlaceholder.classList.add('hidden');
             els.editorForm.classList.remove('hidden');
 
+            // 画面切り替えの制御
             if(window.innerWidth < 768) {
-                els.sidebarArea.classList.add('hidden');
-                els.contentArea.classList.remove('hidden');
-                els.mobileBackBtn.classList.remove('hidden');
-                els.appTitle.classList.add('hidden');
-                els.importBtn.classList.add('hidden');
-                els.navButtons.classList.remove('hidden');
-                isMobileDetailView = true;
+                if (!suppressViewSwitch) {
+                    els.sidebarArea.classList.add('hidden');
+                    els.contentArea.classList.remove('hidden');
+                    els.mobileBackBtn.classList.remove('hidden');
+                    els.appTitle.classList.add('hidden');
+                    els.importBtn.classList.add('hidden');
+                    els.navButtons.classList.remove('hidden');
+                    isMobileDetailView = true;
+                }
             } else {
                 els.navButtons.classList.remove('hidden');
             }
+            
             updateHeaderNav();
             if (typeof lucide !== 'undefined') lucide.createIcons();
             
-            // 連続再生中であればアイコンを更新
             if (isTtsPlayingEx && ttsMasterExIdx !== -1) {
                 updateExContIcon(ttsMasterExIdx, true);
             }
@@ -617,7 +620,7 @@
             const currentPos = filteredIndices.indexOf(editingIndex);
             const nextPos = currentPos + dir;
             if (nextPos >= 0 && nextPos < filteredIndices.length) {
-                openDetail(filteredIndices[nextPos]);
+                openDetail(filteredIndices[nextPos], false);
             }
         }
 
@@ -751,7 +754,8 @@
                 return;
             }
             const dataIndex = filteredIndices[ttsQueueIndex];
-            openDetail(dataIndex);
+            // モバイル版ではリスト再生中は画面を切り替えない (suppressViewSwitch = true)
+            openDetail(dataIndex, true);
             
             speakText(dictionaryData[dataIndex].word, () => {
                 if(!isTtsPlayingList) return;
@@ -779,13 +783,11 @@
             const item = dictionaryData[editingIndex];
             if (!item || !item.examples[index]) return;
 
-            // 通常のクリック時（自動遷移でない時）で、すでに同じボタンが押されたら停止
             if (!isAutoNext && continuePlay && isTtsPlayingEx && ttsMasterExIdx === index) {
                 stopTtsList();
                 return;
             }
 
-            // 自動遷移でない場合は一旦すべて停止（初期化）
             if (!isAutoNext) {
                 stopTtsList(); 
             }
@@ -793,19 +795,17 @@
             if (continuePlay) {
                 isTtsPlayingEx = true;
                 ttsMasterExIdx = index;
-                // 自動遷移後もアイコン状態を正しくセットするためにsetTimeoutでDOM確定を待つ（安全策）
                 setTimeout(() => updateExContIcon(index, true), 10);
 
                 const playSequence = (idx) => {
                     if (!isTtsPlayingEx) return;
 
-                    // その単語の末尾に到達
                     if (idx >= item.examples.length) {
                         const currentPos = filteredIndices.indexOf(editingIndex);
                         if (currentPos < filteredIndices.length - 1) {
                             const nextDataIndex = filteredIndices[currentPos + 1];
-                            openDetail(nextDataIndex);
-                            // 遷移後に最初の例文から再開。isAutoNextフラグをtrueにして呼ぶ
+                            // 詳細画面からの再生なので、ページ送りも詳細画面で行う (suppressViewSwitch = false)
+                            openDetail(nextDataIndex, false);
                             ttsTimeout = setTimeout(() => {
                                 speakExample(0, true, true);
                             }, 1000);

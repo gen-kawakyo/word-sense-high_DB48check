@@ -99,6 +99,10 @@
         .marker-dot { width: 1.1rem; height: 1.1rem; border-radius: 50%; cursor: pointer; transition: transform 0.1s; border: 1px solid rgba(0,0,0,0.1); }
         .marker-dot:hover { transform: scale(1.1); }
         .marker-dot.active { box-shadow: 0 0 0 1px white, 0 0 0 2px currentColor; }
+
+        /* Modal Styles */
+        .modal-overlay { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); }
+        .stat-card { background: white; border-radius: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     </style>
 <link rel="stylesheet" href="/index.css">
 </head>
@@ -111,7 +115,7 @@
                 <button id="mobileBackBtn" class="hidden mr-1 px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-xs font-black shadow-md flex items-center gap-1 transition-all active:scale-95 shrink-0">
                     <i data-lucide="chevron-left" class="w-4 h-4"></i> LIST
                 </button>
-                <h1 id="appTitle" class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2 truncate">
+                <h1 id="appTitle" class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2 truncate cursor-pointer" onclick="location.reload()">
                     <i data-lucide="book-open-check" class="text-blue-600 w-6 h-6 shrink-0"></i>
                     <span>Smart<span class="text-blue-600">Dic</span></span>
                 </h1>
@@ -131,6 +135,9 @@
                         <i data-lucide="chevron-right" class="w-5 h-5"></i>
                     </button>
                 </div>
+                <button id="statsBtn" class="p-2 bg-slate-100 text-slate-600 hover:bg-emerald-600 hover:text-white rounded-lg transition-all active:scale-95 shadow-sm shrink-0" title="Learning Stats">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                </button>
                 <button id="importBtn" class="p-2 bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all active:scale-95 shadow-sm shrink-0" title="Import JSON">
                     <i data-lucide="upload" class="w-4 h-4"></i>
                 </button>
@@ -206,6 +213,9 @@
                     </div>
                 </div>
                 
+                <div class="bg-slate-50 px-3 py-1 flex justify-between items-center border-b border-slate-100 shrink-0">
+                    <span id="listCounter" class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">0 items found</span>
+                </div>
                 <div id="resultsList" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 bg-slate-50/20 pb-20 md:pb-3"></div>
             </aside>
 
@@ -234,7 +244,7 @@
                             </div>
                             <div id="pronunciationArea" class="flex flex-col gap-1 px-2 mt-1"></div>
                         </div>
-                        <div id="metadataDisplay" class="flex flex-wrap gap-2 pt-2 border-t border-slate-50"></div>
+                        <div id="metadataDisplay" class="flex wrap gap-2 pt-2 border-t border-slate-50"></div>
                     </div>
                     <div id="sensesContainer" class="space-y-6"></div>
                     <div id="examplesSection" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
@@ -244,6 +254,24 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="statsModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
+        <div class="stat-card w-full max-w-sm p-6 space-y-6 animate-in zoom-in duration-200">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="text-emerald-500"></i> 学習統計
+                </h2>
+                <button onclick="toggleStats()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
+                </button>
+            </div>
+            <div id="statsContent" class="space-y-4">
+                <!-- Content will be injected by JS -->
+            </div>
+            <button onclick="toggleStats()" class="w-full py-3 bg-slate-900 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all">閉じる</button>
+        </div>
     </div>
 
     <script>
@@ -284,6 +312,9 @@
             prevDetailBtn: document.getElementById('prevDetailBtn'),
             nextDetailBtn: document.getElementById('nextDetailBtn'),
             importBtn: document.getElementById('importBtn'),
+            statsBtn: document.getElementById('statsBtn'),
+            statsModal: document.getElementById('statsModal'),
+            statsContent: document.getElementById('statsContent'),
             editorPlaceholder: document.getElementById('editorPlaceholder'),
             editorForm: document.getElementById('editorForm'),
             viewWord: document.getElementById('viewWord'),
@@ -314,7 +345,8 @@
             modeStudyBtn: document.getElementById('modeStudyBtn'),
             extraSearchDict: document.getElementById('extraSearchDict'),
             ttsPlayListBtn: document.getElementById('ttsPlayListBtn'),
-            ttsPlaySingleBtn: document.getElementById('ttsPlaySingleBtn')
+            ttsPlaySingleBtn: document.getElementById('ttsPlaySingleBtn'),
+            listCounter: document.getElementById('listCounter')
         };
 
         function init() {
@@ -356,6 +388,55 @@
         function getMarking(item) {
             const key = `${item.word}_${item.dataSource}_${item.subID}`;
             return markings[key] || null;
+        }
+
+        function toggleStats() {
+            if (els.statsModal.classList.contains('hidden')) {
+                const total = dictionaryData.length;
+                const filtered = filteredIndices.length;
+                const counts = { red: 0, yellow: 0, green: 0, none: 0 };
+                
+                dictionaryData.forEach(item => {
+                    const m = getMarking(item);
+                    if (m) counts[m]++;
+                    else counts.none++;
+                });
+
+                els.statsContent.innerHTML = `
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Total Data</span>
+                            <span class="text-xl font-black text-slate-800">${total}</span>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                            <span class="text-[10px] font-bold text-blue-400 block uppercase">Filtered</span>
+                            <span class="text-xl font-black text-blue-800">${filtered}</span>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between p-3 bg-rose-50 rounded-xl border border-rose-100">
+                            <span class="font-bold text-rose-700 flex items-center gap-2 text-xs"><div class="w-2 h-2 rounded-full bg-rose-500"></div> 🚩 復習が必要</span>
+                            <span class="font-black text-rose-800">${counts.red}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-100">
+                            <span class="font-bold text-amber-700 flex items-center gap-2 text-xs"><div class="w-2 h-2 rounded-full bg-amber-500"></div> ⭐ 注意が必要</span>
+                            <span class="font-black text-amber-800">${counts.yellow}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                            <span class="font-bold text-emerald-700 flex items-center gap-2 text-xs"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> ✅ 習得済み</span>
+                            <span class="font-black text-emerald-800">${counts.green}</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-slate-100 rounded-xl">
+                            <span class="font-bold text-slate-500 flex items-center gap-2 text-xs"><div class="w-2 h-2 rounded-full bg-slate-300"></div> 未マーク</span>
+                            <span class="font-black text-slate-600">${counts.none}</span>
+                        </div>
+                    </div>
+                `;
+                els.statsModal.classList.remove('hidden');
+            } else {
+                els.statsModal.classList.add('hidden');
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function standardizeItem(item, sourceName) {
@@ -511,6 +592,7 @@
             }
 
             filteredIndices = filtered.map(item => item.idx);
+            els.listCounter.innerText = `${filteredIndices.length} items found`;
             const isStudy = currentMode === 'study';
             els.resultsList.innerHTML = filtered.map(item => {
                 const markClass = item.mark ? `mark-${item.mark}` : 'border-white';
@@ -584,10 +666,13 @@
                     <div class="ex-ja-text text-slate-500">${formatText(ex.ja)}</div>
                 </div>`).join('');
             
+            if (item.examples.length === 0) {
+                els.examplesContainer.innerHTML = `<p class="text-xs text-slate-400 italic py-2">No examples available.</p>`;
+            }
+
             els.editorPlaceholder.classList.add('hidden');
             els.editorForm.classList.remove('hidden');
 
-            // 画面切り替えの制御
             if(window.innerWidth < 768) {
                 if (!suppressViewSwitch) {
                     els.sidebarArea.classList.add('hidden');
@@ -722,11 +807,9 @@
             if(ttsTimeout) clearTimeout(ttsTimeout);
             window.speechSynthesis.cancel();
             
-            // リスト再生ボタンのリセット
             els.ttsPlayListBtn.innerHTML = '<i data-lucide="volume-2" class="w-5 h-5"></i>';
             els.ttsPlayListBtn.className = els.ttsPlayListBtn.className.replace('bg-red-600', 'bg-white').replace('text-white', 'text-slate-600');
             
-            // 例文カードとボタンのリセット
             document.querySelectorAll('.example-card').forEach(el => el.classList.remove('ring-2', 'ring-blue-500'));
             document.querySelectorAll('.ex-cont-btn').forEach(btn => {
                 btn.innerHTML = '<i data-lucide="play-circle" class="w-3.5 h-3.5"></i>';
@@ -754,7 +837,6 @@
                 return;
             }
             const dataIndex = filteredIndices[ttsQueueIndex];
-            // モバイル版ではリスト再生中は画面を切り替えない (suppressViewSwitch = true)
             openDetail(dataIndex, true);
             
             speakText(dictionaryData[dataIndex].word, () => {
@@ -781,7 +863,7 @@
 
         window.speakExample = (index, continuePlay, isAutoNext = false) => {
             const item = dictionaryData[editingIndex];
-            if (!item || !item.examples[index]) return;
+            if (!item) return;
 
             if (!isAutoNext && continuePlay && isTtsPlayingEx && ttsMasterExIdx === index) {
                 stopTtsList();
@@ -800,26 +882,37 @@
                 const playSequence = (idx) => {
                     if (!isTtsPlayingEx) return;
 
+                    // その単語の末尾に到達した
                     if (idx >= item.examples.length) {
                         const currentPos = filteredIndices.indexOf(editingIndex);
-                        if (currentPos < filteredIndices.length - 1) {
-                            const nextDataIndex = filteredIndices[currentPos + 1];
-                            // 詳細画面からの再生なので、ページ送りも詳細画面で行う (suppressViewSwitch = false)
-                            openDetail(nextDataIndex, false);
-                            ttsTimeout = setTimeout(() => {
-                                speakExample(0, true, true);
-                            }, 1000);
-                        } else {
+                        let nextPos = currentPos + 1;
+                        let foundNextWithExample = false;
+
+                        // 例文がある次の単語が見つかるまでスキップ
+                        while (nextPos < filteredIndices.length) {
+                            const nextItem = dictionaryData[filteredIndices[nextPos]];
+                            if (nextItem.examples && nextItem.examples.length > 0) {
+                                openDetail(filteredIndices[nextPos], false);
+                                foundNextWithExample = true;
+                                ttsTimeout = setTimeout(() => {
+                                    speakExample(0, true, true);
+                                }, 1000);
+                                break;
+                            }
+                            nextPos++;
+                        }
+
+                        if (!foundNextWithExample) {
                             stopTtsList();
                         }
                         return;
                     }
 
                     document.querySelectorAll('.example-card').forEach(el => el.classList.remove('ring-2', 'ring-blue-500'));
-                    const card = document.querySelectorAll('.example-card')[idx];
-                    if (card) {
-                        card.classList.add('ring-2', 'ring-blue-500');
-                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    const cards = document.querySelectorAll('.example-card');
+                    if (cards[idx]) {
+                        cards[idx].classList.add('ring-2', 'ring-blue-500');
+                        cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
 
                     const cleanText = item.examples[idx].en.replace(/\{\{[^:]+:([^}]+)\}\}/g, '$1');
@@ -830,7 +923,7 @@
                     });
                 };
                 playSequence(index);
-            } else {
+            } else if (item.examples[index]) {
                 const cleanText = item.examples[index].en.replace(/\{\{[^:]+:([^}]+)\}\}/g, '$1');
                 speakText(cleanText);
             }
@@ -867,6 +960,8 @@
             els.azRight.onclick = () => els.azContainer.scrollBy({left: 120, behavior: 'smooth'});
             els.importBtn.onclick = () => { stopTtsList(); els.fileInput.click(); };
             els.fileInput.onchange = handleFileUpload;
+
+            els.statsBtn.onclick = toggleStats;
 
             els.modeDictBtn.onclick = () => {
                 currentMode = 'dict';
